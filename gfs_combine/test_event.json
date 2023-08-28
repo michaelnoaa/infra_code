@@ -1,0 +1,21 @@
+{
+  "Records": [
+    {
+      "messageId": "b81db457",
+      "receiptHandle": "AQE",
+      "body": "{\"Records\":[{\"eventVersion\":\"2.1\",\"eventSource\":\"aws:s3\",\"awsRegion\":\"us-east-1\",\"eventTime\":\"2023-08-22T15:48:05.085Z\",\"eventName\":\"ObjectCreated:Put\",\"userIdentity\":{\"principalId\":\"AWS:AROARZWIYOBMFWHOVVKG6:gfs-large-function-1cbc333\"},\"requestParameters\":{\"sourceIPAddress\":\"3.236.173.103\"},\"responseElements\":{\"x-amz-request-id\":\"62E451WD57AA8GBH\",\"x-amz-id-2\":\"AU60\"},\"s3\":{\"s3SchemaVersion\":\"1.0\",\"configurationId\":\"NjNm\",\"bucket\":{\"name\":\"noaa-gfs-bdp-pds\",\"ownerIdentity\":{\"principalId\":\"A2AJV00K47QOI1\"},\"arn\":\"arn:aws:s3:::noaa-gfs-bdp-pds\"},\"object\":{\"key\":\"gfs.20230805/12/atmos/gfs.t12z.pgrb2.0p25.f064\",\"size\":537881863,\"eTag\":\"c9121e90a7904c3a8e59a7cd8ddbfe65\",\"sequencer\":\"0064E4D8B0A25529DB\"}}}]}",
+      "attributes": {
+        "ApproximateReceiveCount": "1",
+        "AWSTraceHeader": "Ropled=0",
+        "SentTimestamp": "1692719286188",
+        "SenderId": "AIDAIT2UOQQY3AUEKVGXU",
+        "ApproximateFirstReceiveTimestamp": "1692719286189"
+      },
+      "messageAttributes": {},
+      "md5OfBody": "53b",
+      "eventSource": "aws:sqs",
+      "eventSourceARN": "arn:aws:sqs:us-east-1:635649707216:DSG_combine_GFS_queue",
+      "awsRegion": "us-east-1"
+    }
+  ]
+}
