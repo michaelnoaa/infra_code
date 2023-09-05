@@ -1,7 +1,7 @@
 resource "aws_lambda_function" "my_lambda" { # lambda.tf
   function_name                  = "arn:aws:lambda:${local.region}:${local.account_id}:function:${local.config_name}_function"
-  filename                       = "${data.archive_file.my_lambda_zip_inline.output_path}"
-  source_code_hash               = "${data.archive_file.my_lambda_zip_inline.output_base64sha256}"
+  filename                       = data.archive_file.my_lambda_zip_inline.output_path
+  source_code_hash               = data.archive_file.my_lambda_zip_inline.output_base64sha256
   handler                        = "hrrr_sample_lambda.handler"
   role                           = local.exec_role
   runtime                        = "python3.11"

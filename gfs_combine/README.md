@@ -28,7 +28,7 @@
 - Verify ScanGrib can scan the cloud file
 
 ```/usr/local/rtoper/bin/ScanGrib gfs.t12z.pgrb2.0p25.f051```
-- Verify corresponding variables within the cloud prepared idx
+- Verify corresponding variables within the cloud prepared idx (applies to gfs_boto_combine.py only)
 
 ```aws s3 cp s3://dsg-combine-gfs-bucket/gfs.20230826/12/atmos/gfs.t12z.pgrb2.0p25.f051.idx .``` 
 

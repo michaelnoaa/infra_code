@@ -92,18 +92,18 @@ EOF
 
 data "archive_file" "my_lambda_zip_file" { # our lambda script zipped, with content from a file
   type        = "zip"
-  output_path = ".terraform/lambda_tmp/gfs_combine_lambda.zip"
+  output_path = ".terraform/lambda_tmp/gfs_cat_lambda.zip"
   source {
-    filename  = "gfs_boto_combine.py"
-    content   = file("gfs_boto_combine.py")
+    filename  = "gfs_boto_cat.py"
+    content   = file("gfs_boto_cat.py")
   }
 }
 
 resource "aws_lambda_function" "my_lambda" { # lambda.tf
   function_name                  = "arn:aws:lambda:${local.region}:${local.account_id}:function:${local.config_name}_function"
-  filename                       = "${data.archive_file.my_lambda_zip_file.output_path}"
-  source_code_hash               = "${data.archive_file.my_lambda_zip_file.output_base64sha256}"
-  handler                        = "gfs_boto_combine.handler"
+  filename                       = data.archive_file.my_lambda_zip_file.output_path
+  source_code_hash               = data.archive_file.my_lambda_zip_file.output_base64sha256
+  handler                        = "gfs_boto_cat.handler"
   role                           = local.exec_role
   runtime                        = "python3.11"
   timeout                        = 900 # aws lambdas allow for up to 15 minutes (or 900 seconds)
@@ -139,8 +139,8 @@ resource "aws_lambda_event_source_mapping" "my_event_source_mapping" { # event_m
             eventName = ["ObjectCreated:Put"],
             s3 = {
               object = {
-                # key = [{ suffix= "idx"}]
-                key = [{ suffix= "pgrb2.0p25.f064"}]
+                # key = [{ suffix = "idx"}]
+                key = [{ suffix = "pgrb2.0p25.f064"}]
               }
             }
           }

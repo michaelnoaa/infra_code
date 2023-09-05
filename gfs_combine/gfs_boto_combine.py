@@ -65,7 +65,7 @@ def idx_to_byteranges(lines: list, search_str: str) -> dict:
 
 def contig_ranges(byte_ranges: dict):
     '''Analyze our byte_ranges for contiguous sections of minimum size but no more than mem_max
-    (our lambda cripples at this point), also the last part of a multipart can be smaller.'''
+    (our lambda buffer cripples at this point), also the last part of a multipart can be smaller.'''
     new_ranges = [] # initialize to hold our new contiguous range
     for n, this_range in enumerate(byte_ranges.keys(), start=1):
         start, end = this_range[6:].split('-')
@@ -80,7 +80,7 @@ def contig_ranges(byte_ranges: dict):
     return new_ranges
 
 def new_idx_line(prev_line: str, byte_range: str, file_size: int, next_line_no: int):
-    '''Update and return the running grib idx file with this new addition please.
+    '''Update and return the previous grib idx line with this new addition please.
     Given a previous grib idx line, the byte range of that grib var, a previous file_size,
     and a next line_no, return a new line_no, running size and new idx line.'''
     prev_line_no, prev_start, *other_vars = prev_line.split(':')
@@ -94,7 +94,7 @@ def new_idx_line(prev_line: str, byte_range: str, file_size: int, next_line_no: 
     return new_line_no, new_size, new_line
 
 def build_parts(my_key: str):
-    '''Build our multipart upload parts and the new grib index - for the given key / file'''
+    '''Build our desired byte ranges and the new grib index - for the given key / file'''
     my_key_b = my_key.replace("pgrb2","pgrb2b")
     new_lines = get_idx_lines(gfs_bucket, my_key) # the start of our new combined idx is the pgrb2 idx
     next_line_no = new_lines[-1].split(':')[0] # read last line to parse its record number
