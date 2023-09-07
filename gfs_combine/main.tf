@@ -7,17 +7,20 @@ locals { # some local variables # main.tf
   tagkey        = "noaa:oar:gsl:projectid" # The projectid tagkey is required by GSL to track costs
   tagvalue      = "its-dsg-learning"       # The projectid tagvalue is required by GSL to track costs
   tagname       = "${local.config_name}_tagname" # Name used in AWS GUI. Convenient, but not required. Default Name is '-'
+  dsgtagkey     = "noaa:oar:gsl:dsg"
+  dsgtagvalue   = local.config_name
   account_id    = data.aws_caller_identity.current.account_id # my aws account_id
   exec_role     = "arn:aws:iam::${local.account_id}:role/GSL-LambdaS3EC2Execution" # cloud admin provided role
   sns_topic     = "arn:aws:sns:us-east-1:123901341784:NewGFSObject" # New data notifications for GFS, only Lambda and SQS protocols allowed
 }
 
 provider "aws" { # provider.tf
-  region             = local.region
+  region                = local.region
   default_tags { # any resources created with this provider will inherit these tags
     tags = {
-      Name           = local.tagname
-      (local.tagkey) = local.tagvalue
+      Name              = local.tagname
+      (local.tagkey)    = local.tagvalue
+      (local.dsgtagkey) = local.dsgtagvalue
     }
   }
 }
@@ -36,6 +39,7 @@ resource "aws_sqs_queue" "my_queue" { # queue.tf
   tags_all = {
     Name                     = local.tagname
     (local.tagkey)           = local.tagvalue
+    (local.dsgtagkey)        = local.dsgtagvalue
   }
   policy                     = <<EOF
 {

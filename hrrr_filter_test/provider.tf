@@ -1,9 +1,10 @@
 provider "aws" { # provider.tf
-  region = local.region
+  region                = local.region
   default_tags { # any resources created with this provider will inherit these tags
     tags = {
-      Name           = local.tagname
-      (local.tagkey) = local.tagvalue
+      Name              = local.tagname
+      (local.tagkey)    = local.tagvalue
+      (local.dsgtagkey) = local.dsgtagvalue
     }
   }
 }

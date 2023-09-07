@@ -4,6 +4,7 @@ resource "aws_sqs_queue" "my_queue" { # queue.tf
   tags_all = {
     Name                     = local.tagname
     (local.tagkey)           = local.tagvalue
+    (local.dsgtagkey)        = local.dsgtagvalue
   }
   policy                     = <<EOF
 {
