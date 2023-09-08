@@ -16,13 +16,13 @@
 
 - to view your lambda logs
 
-```aws logs tail --follow --region us-east-1 /aws/lambda/${local.config_name}_function```
+```aws logs tail --follow --region us-east-1 /aws/lambda/DSG_HRRR_filter_test_function```
 
 - to view log stream info # parse_log_stream to see sorted human times
 
 ```aws logs describe-log-streams  --region us-east-1 --log-group-name /aws/lambda/DSG_HRRR_filter_test_function```
 
-```aws logs describe-log-groups --region us-east-1 --log-group-name-pattern DSG_combine_GFS_function```
+```aws logs describe-log-groups --region us-east-1 --log-group-name-pattern DSG_HRRR_filter_test```
   
 ## references
 - [NODD HRRR information](https://registry.opendata.aws/noaa-hrrr-pds/)

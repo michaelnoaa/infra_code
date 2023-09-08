@@ -28,7 +28,7 @@ provider "aws" { # provider.tf
 
 data "aws_caller_identity" "current" {} # derive my account info into a variable
 
-resource "aws_s3_bucket_lifecycle_configuration" "gfs_bucket_lifecycle" {
+resource "aws_s3_bucket_lifecycle_configuration" "gfs_bucket_lifecycle" { # purger.tf
   bucket  = local.bucket_name
   rule {
     id = "Purger_lifecycle"
@@ -38,7 +38,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "gfs_bucket_lifecycle" {
     }
   }
 }
-resource "aws_s3_bucket" "gfs_bucket" {
+resource "aws_s3_bucket" "gfs_bucket" { # bucket.tf
   bucket                 = local.bucket_name
   # force_destroy          = null
   tags = {
