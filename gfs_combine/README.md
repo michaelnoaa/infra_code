@@ -13,7 +13,7 @@
 ## Sample verification workflow
 - view your lambda logs
 
-```aws logs tail --follow --region us-east-1 /aws/lambda/DSG_combine_GFS_function```
+```aws logs tail --follow --region us-east-1 /aws/lambda/DSG_combine_GFS_function --since 6h```
 
 - List files produced for cycle (replace 'dsg-combine-gfs-bucket' with your bucket name)
 

@@ -10,7 +10,7 @@ gfs_bucket  = 'noaa-gfs-bdp-pds'
 end_pattern = "pgrb2.0p25.f064"  # pattern for the 64th hour forecast of the 0.25 degree GFS pgrb2
 
 def handler(raw_event: dict, context: 'awslambdaric.lambda_context.LambdaContext'):
-    '''Our default handler method for our lambda. Filter out using our end_pattern'''
+    '''Our default handler method for our lambda. Filter out all but our end_pattern'''
     # print("Lambda function memory limits in MB:", context.memory_limit_in_mb) # 128 MB
     # print(f"Received raw event: {raw_event}")
     body = json.loads(raw_event["Records"][0]["body"])
@@ -22,16 +22,15 @@ def handler(raw_event: dict, context: 'awslambdaric.lambda_context.LambdaContext
       message = body
     print(f"Received raw message: {message}")
     message_key = message["Records"][0]["s3"]["object"]["key"]
+    # message_key eg: gfs.20230811/18/atmos/gfs.t18z.pgrb2.0p25.f064
     print(f"DSG Filtered object key: {message_key}")
     if not message_key.endswith(end_pattern):
       print(f"Not the droids we're looking for, moving on..")
-      return
-    # print(f', continuing to download and process data files..')
-    filename = message_key.split('/')[-1]
-    ymd = message_key[4:12]
-    hour = filename[5:7] # runtime hour
-    ## download path is: gfs.20230811/18/atmos/gfs.t18z.pgrb2.0p25.f064
-    for fcst in range(0,65): # loop through first 64 forecast files
+      return                              # exit our lambda, nothing to do
+    filename = message_key.split('/')[-1] # gfs.t18z.pgrb2.0p25.f064
+    ymd = message_key[4:12]               # 20230811
+    hour = filename[5:7]                  # runtime hour # 18
+    for fcst in range(0,65):              # loop through first 64 forecast files
         perform_cat(f'gfs.{ymd}/{hour}/atmos/gfs.t{hour}z.pgrb2.0p25.f{fcst:03d}')
     print(f'Lambda time remaining: {context.get_remaining_time_in_millis()/1000:.1f} seconds')
 
