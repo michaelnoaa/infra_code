@@ -9,6 +9,7 @@ locals { # some local variables # main.tf
   tagname       = "${local.config_name}_tagname" # Name used in AWS GUI. Convenient, but not required. Default Name is '-'
   dsgtagkey     = "noaa:oar:gsl:dsg"
   dsgtagvalue   = local.config_name
+  projectkey    = "noaa:oar:gsl:dsg:project"
   account_id    = data.aws_caller_identity.current.account_id # my aws account_id
   config_name2  = replace(lower(local.config_name), "_", "-")
   bucket_name   = "${local.config_name2}-bucket"
@@ -16,12 +17,13 @@ locals { # some local variables # main.tf
 resource "time_static" "my_time" {} # use current time in terraform
 
 provider "aws" { # provider.tf    
-  region                = local.region           
+  region                 = local.region           
   default_tags { # any resources created with this provider will inherit these tags
     tags = {
-      Name              = local.tagname        
-      (local.tagkey)    = local.tagvalue
-      (local.dsgtagkey) = local.dsgtagvalue
+      Name               = local.tagname        
+      (local.tagkey)     = local.tagvalue
+      (local.dsgtagkey)  = local.dsgtagvalue
+      (local.projectkey) = local.dsgtagvalue
     }
   } 
 }
@@ -34,7 +36,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "gfs_bucket_lifecycle" { # purg
     id = "Purger_lifecycle"
     status  = "Enabled"
     expiration {
-      days = 4
+      days = 2
     }
   }
 }

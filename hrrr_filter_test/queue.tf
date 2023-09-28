@@ -3,8 +3,9 @@ resource "aws_sqs_queue" "my_queue" { # queue.tf
   visibility_timeout_seconds = 30
   tags_all = {
     Name                     = local.tagname
-    (local.tagkey)           = local.tagvalue
-    (local.dsgtagkey)        = local.dsgtagvalue
+    (local.tagkey)           = local.tagval
+    (local.dsgtagkey)        = local.dsgtagval
+    (local.projectkey)       = local.dsgtagval
   }
   policy                     = <<EOF
 {

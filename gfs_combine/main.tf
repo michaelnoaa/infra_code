@@ -4,23 +4,25 @@ locals { # some local variables # main.tf
   region        = "us-east-1"              # this needs to be set like this for GSL or nothing seems to work / look right
   config_name   = "DSG_combine_GFS"        # Our base name for our various resources
   this_config   = path.root                # the parent folder for this terraform config file # split('/')[-1]
-  tagkey        = "noaa:oar:gsl:projectid" # The projectid tagkey is required by GSL to track costs
-  tagvalue      = "its-dsg-learning"       # The projectid tagvalue is required by GSL to track costs
+  tagkey        = "noaa:oar:gsl:projectid" # The projectid tag key is required by GSL to track costs
+  tagval        = "its-dsg-learning"       # The projectid tag value is required by GSL to track costs
   tagname       = "${local.config_name}_tagname" # Name used in AWS GUI. Convenient, but not required. Default Name is '-'
   dsgtagkey     = "noaa:oar:gsl:dsg"
-  dsgtagvalue   = local.config_name
+  dsgtagval     = local.config_name
+  projectkey    = "noaa:oar:gsl:dsg:project"
   account_id    = data.aws_caller_identity.current.account_id # my aws account_id
   exec_role     = "arn:aws:iam::${local.account_id}:role/GSL-LambdaS3EC2Execution" # cloud admin provided role
   sns_topic     = "arn:aws:sns:us-east-1:123901341784:NewGFSObject" # New data notifications for GFS, only Lambda and SQS protocols allowed
 }
 
 provider "aws" { # provider.tf
-  region                = local.region
+  region                 = local.region
   default_tags { # any resources created with this provider will inherit these tags
     tags = {
-      Name              = local.tagname
-      (local.tagkey)    = local.tagvalue
-      (local.dsgtagkey) = local.dsgtagvalue
+      Name               = local.tagname
+      (local.tagkey)     = local.tagval
+      (local.dsgtagkey)  = local.dsgtagval
+      (local.projectkey) = local.dsgtagval
     }
   }
 }
@@ -38,8 +40,9 @@ resource "aws_sqs_queue" "my_queue" { # queue.tf
   visibility_timeout_seconds = 900 # should be greater than configured lambda timeout (900 secs)
   tags_all = {
     Name                     = local.tagname
-    (local.tagkey)           = local.tagvalue
-    (local.dsgtagkey)        = local.dsgtagvalue
+    (local.tagkey)           = local.tagval
+    (local.dsgtagkey)        = local.dsgtagval
+    (local.projectkey)       = local.dsgtagval
   }
   policy                     = <<EOF
 {

@@ -17,22 +17,28 @@
 
 - List files produced for cycle (replace 'dsg-combine-gfs-bucket' with your bucket name)
 
-```aws s3 ls s3://dsg-combine-gfs-bucket/gfs.20230826/12/atmos/``` 
+```aws s3 ls s3://dsg-combine-gfs-bucket/public/data/grib/ftp/7/0/96/0_1038240_0/``` 
 
 - Copy a grib file from the cloud prepared bucket
 
-```aws s3 cp s3://dsg-combine-gfs-bucket/gfs.20230826/12/atmos/gfs.t12z.pgrb2.0p25.f051 .``` 
-- Diff the cloud grib file with the corresponding cfd file
+```aws s3 cp s3://dsg-combine-gfs-bucket/public/data/grib/ftp/7/0/96/0_1038240_0/2326412000057 .``` 
+- Diff the cloud grib file with the corresponding cfd merged file
 
-```diff /public/data/grib/ftp/7/0/96/0_1038240_0/2323812000051 gfs.t12z.pgrb2.0p25.f051```
+```diff 2326412000057 /public/data/grib/ftp/7/0/96/0_1038240_0/```
+- Diff the *synced* cloud grib file with the corresponding cfd merged file
+
+```diff /public/data/grids/gfs/0p25deg/cloud_merged/96/0_1038240_0/2326418000009 /public/data/grids/gfs/0p25deg/grib2/```
 - Verify ScanGrib can scan the cloud file
 
-```/usr/local/rtoper/bin/ScanGrib gfs.t12z.pgrb2.0p25.f051```
+```/usr/local/rtoper/bin/ScanGrib 2326412000057```
 - Verify corresponding variables within the cloud prepared idx (applies to gfs_boto_combine.py only)
 
-```aws s3 cp s3://dsg-combine-gfs-bucket/gfs.20230826/12/atmos/gfs.t12z.pgrb2.0p25.f051.idx .``` 
+```aws s3 cp s3://dsg-combine-gfs-bucket/public/data/grib/ftp/7/0/96/0_1038240_0/2326412000057.idx .``` 
 
-```tail gfs.t12z.pgrb2.0p25.f051.idx```
+```tail 2326412000057.idx```
+
+## Sample cron for keeping a local copy of the grib files
+```0,5,10,15 4,10,16,22 * * * aws --profile data_depot s3 sync --exclude "*.idx" s3://dsg-combine-gfs-bucket/public/data/grib/ftp/7/0/ /public/data/grids/gfs/0p25deg/cloud_merged/```
 
 ## references
 - [NODD GFS information page](https://registry.opendata.aws/noaa-gfs-bdp-pds/)

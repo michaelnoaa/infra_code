@@ -4,6 +4,7 @@
 
 import json
 import boto3
+from datetime import datetime
 
 my_bucket   = 'dsg-combine-gfs-bucket'
 gfs_bucket  = 'noaa-gfs-bdp-pds'
@@ -31,9 +32,11 @@ def handler(raw_event: dict, context: 'awslambdaric.lambda_context.LambdaContext
       return                              # exit our lambda, nothing to do
     filename = message_key.split('/')[-1] # eg: gfs.t18z.pgrb2.0p25.f064
     ymd = message_key[4:12]               # eg: 20230811
+    yjday = datetime.strptime(ymd, '%Y%m%d').strftime('%y%j')
     hour = filename[5:7]                  # runtime hour # eg: 18
+    ods_path = f'public/data/grib/ftp/7/0/PP/0_1038240_0/{yjday}{hour}000'
     for fcst in range(0,65):              # loop through first 64 forecast files
-        perform_merge(f'gfs.{ymd}/{hour}/atmos/gfs.t{hour}z.pgrb2.0p25.f{fcst:03d}')
+        perform_merge(f'gfs.{ymd}/{hour}/atmos/gfs.t{hour}z.pgrb2.0p25.f{fcst:03d}', ods_path)
     print(f'Lambda time remaining: {context.get_remaining_time_in_millis()/1000:.1f} seconds')
 
 def get_idx_lines(bucket: str, key: str):
@@ -106,7 +109,7 @@ def build_parts(my_key: str):
         new_lines.append(new_line) # tally our idx (after recaluclating via new_idx_line())
     return new_lines, byte_ranges, new_size
 
-def perform_upload(this_range: str, my_key: str, my_upload_id, parts_info: dict, buffer: bytes):
+def perform_upload(this_range: str, my_key: str, my_upload_id, parts_info: dict, buffer: bytes, ods_key: str):
     '''We are uploading parts, but need to buffer until we have the minimum size required..
     Unless we have a range large enough, then we can CopySourceRange instead (faster, less memory)'''
     skip_buffer = False # default to using the buffer
@@ -134,7 +137,7 @@ def perform_upload(this_range: str, my_key: str, my_upload_id, parts_info: dict,
             print(f'uploading part #{part_num} from src_b: {my_key_b}, {this_range}, size: {len(buffer)/1024/1024:.2f}MB')
             response = s3.upload_part( # upload our next part from the buffer we've assembled
                 Bucket     = my_bucket,
-                Key        = my_key,
+                Key        = ods_key,
                 UploadId   = my_upload_id,
                 PartNumber = part_num,
                 Body       = buffer
@@ -146,7 +149,7 @@ def perform_upload(this_range: str, my_key: str, my_upload_id, parts_info: dict,
         print(f'uploading part #{part_num} from src_b:{my_key_b}, {this_range}, size:{size/1024/1024:.2f} MB')
         response = s3.upload_part_copy( # upload our next part from the buffer we've assembled
             Bucket          = my_bucket,
-            Key             = my_key,
+            Key             = ods_key,
             UploadId        = my_upload_id,
             PartNumber      = part_num,
             CopySource      = {'Bucket':gfs_bucket, 'Key':my_key_b},
@@ -155,19 +158,23 @@ def perform_upload(this_range: str, my_key: str, my_upload_id, parts_info: dict,
         parts_info['Parts'].append( {'PartNumber': part_num, 'ETag': response['CopyPartResult']['ETag'].strip('\"')} )
     return buffer, parts_info
 
-def perform_merge(source_key: str):
+def perform_merge(source_key: str, ods_path: str):
     '''Perform the copy, subset, combine that we are interested in for the given file'''
     from botocore.exceptions import ClientError
     global s3 # register our boto3 client once, and use that session throughout our thread
-    print(f'running multipart upload, copying from: {source_key}')
+    fcst_hr = source_key[-3:]
+    ods_proc = '96' # default model process to a forecast
+    if fcst_hr == '000': ods_proc = '81' # if an analysis, adjust model process
+    ods_key = ods_path.replace('PP', ods_proc) + fcst_hr
+    print(f'running gfs_combine from: {source_key} to {ods_key}')
     s3 = boto3.client('s3', region_name='us-east-1')
     try:
         new_lines, byte_ranges, size = build_parts(source_key) # build and upload our idx, get meta
         put_response = s3.put_object( # put our new idx file in the bucket
-            Bucket=my_bucket, Key=source_key+'.idx', Body="\n".join(new_lines))
+            Bucket=my_bucket, Key=ods_key+'.idx', Body="\n".join(new_lines))
         response_m = s3.create_multipart_upload(
             Bucket = my_bucket,
-            Key = source_key, # use the same source key (path and filename) for our new object
+            Key = ods_key, # use the same source key (path and filename) for our new object
             ContentType = 'binary/octet-stream'
         )
         my_upload_id = response_m['UploadId']
@@ -175,7 +182,7 @@ def perform_merge(source_key: str):
         part_num = 1 # our first part of this multi part upload is the pgrb2 file
         response_c = s3.upload_part_copy( # upload the first part as a full copy of first file
             Bucket     = my_bucket,
-            Key        = source_key,
+            Key        = ods_key,
             UploadId   = my_upload_id,
             PartNumber = part_num,
             CopySource = {'Bucket':gfs_bucket, 'Key':source_key}
@@ -187,12 +194,12 @@ def perform_merge(source_key: str):
         buffer = b'' # initialize a buffer to hold our part content(s) to be uploaded
         for this_range in new_ranges: # upload contiguous range of bytes for chosen variables
             buffer, parts_info = perform_upload(
-                this_range, source_key, my_upload_id, parts_info, buffer) # upload our fields
-        buffer, parts_info = perform_upload("bytes=0-0", source_key, my_upload_id, parts_info, buffer) # trigger uploading final buffer
+                this_range, source_key, my_upload_id, parts_info, buffer, ods_key) # upload our fields
+        buffer, parts_info = perform_upload("bytes=0-0", source_key, my_upload_id, parts_info, buffer, ods_key) # trigger uploading final buffer
         # print(f'parts_info: {parts_info}')
         resonse_comp = s3.complete_multipart_upload( # complete the uploading of all parts
             Bucket          = my_bucket,
-            Key             = source_key,
+            Key             = ods_key,
             UploadId        = my_upload_id,
             MultipartUpload = parts_info,
         )
